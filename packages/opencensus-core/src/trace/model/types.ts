@@ -221,18 +221,6 @@ export interface Link {
   attributes: Attributes;
 }
 
-/** Defines the trace options */
-export interface TraceOptions {
-  /** Root span name */
-  name: string;
-  /** Trace context */
-  spanContext?: SpanContext;
-  /** Span kind */
-  kind?: SpanKind;
-  /** Determines the sampling rate. Ranges from 0.0 to 1.0 */
-  samplingRate?: number;
-}
-
 /** Defines the span options */
 export interface SpanOptions {
   /** Span name */
@@ -241,6 +229,14 @@ export interface SpanOptions {
   kind?: SpanKind;
   /** The new span's parent */
   childOf?: Span;
+}
+
+/** Defines the trace options */
+export interface TraceOptions extends SpanOptions {
+  /** Trace context */
+  spanContext?: SpanContext;
+  /** Determines the sampling rate. Ranges from 0.0 to 1.0 */
+  samplingRate?: number;
 }
 
 export type TraceState = string;
@@ -496,10 +492,9 @@ export interface TracerBase extends SpanEventListener {
   /**
    * Start a new RootSpan to currentRootSpan
    * @param options Options for tracer instance
-   * @param fn Callback function
-   * @returns The callback return
+   * @returns A Span
    */
-  startRootSpan<T>(options: TraceOptions, fn: (root: Span) => T): T;
+  startSpan(options: TraceOptions|SpanOptions): Span;
 
   /**
    * Register a OnEndSpanEventListener on the tracer instance
@@ -512,16 +507,6 @@ export interface TracerBase extends SpanEventListener {
    * @param listener The listener to unregister.
    */
   unregisterSpanEventListener(listener: SpanEventListener): void;
-
-  /**
-   * Start a new Span instance to the currentRootSpan
-   * @param childOf Span
-   * @param [name] Span name
-   * @param [kind] Span kind
-   * @param [options] Span Options
-   * @returns The new Span instance started
-   */
-  startChildSpan(options?: SpanOptions): Span;
 }
 
 /** Interface for Tracer */
@@ -550,4 +535,22 @@ export interface Tracer extends TracerBase {
    *     the trace context binded to them.
    */
   wrapEmitter(emitter: NodeJS.EventEmitter): void;
+
+  /**
+   * Start a new RootSpan to currentRootSpan
+   * @param options Options for tracer instance
+   * @param fn Callback function
+   * @returns The callback return
+   */
+  startRootSpan<T>(options: TraceOptions, fn: (root: Span) => T): T;
+
+  /**
+   * Start a new Span instance to the currentRootSpan
+   * @param childOf Span
+   * @param [name] Span name
+   * @param [kind] Span kind
+   * @param [options] Span Options
+   * @returns The new Span instance started
+   */
+  startChildSpan(options?: SpanOptions): Span;
 }

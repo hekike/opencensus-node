@@ -15,13 +15,12 @@
  */
 
 import * as cls from '../../internal/cls';
-
 import {NoRecordSpan} from './no-record/no-record-span';
 import {CoreTracerBase} from './tracer-base';
 import * as types from './types';
 
 /**
- * This class represent a tracer with CLS.
+ * This class represents a tracer with Continues Local Storage (CLS).
  */
 export class CoreTracer extends CoreTracerBase implements types.Tracer {
   /** Manage context automatic propagation */
@@ -55,10 +54,9 @@ export class CoreTracer extends CoreTracerBase implements types.Tracer {
       T {
     const self = this;
     return self.contextManager.runAndReturn(() => {
-      return super.startRootSpan(options, (root) => {
-        self.currentRootSpan = root;
-        return fn(root);
-      });
+      const root = super.startSpan(options);
+      self.currentRootSpan = root;
+      return fn(root);
     });
   }
 
@@ -98,7 +96,7 @@ export class CoreTracer extends CoreTracerBase implements types.Tracer {
 
   /**
    * Starts a span.
-   * @param [options] span options
+   * @param [options] SpanOptions object to start a child span.
    */
   startChildSpan(options?: types.SpanOptions): types.Span {
     if (!this.currentRootSpan) {
@@ -106,7 +104,7 @@ export class CoreTracer extends CoreTracerBase implements types.Tracer {
           'no current trace found - must start a new root span first');
     }
 
-    return super.startChildSpan(Object.assign(
+    return super.startSpan(Object.assign(
         {childOf: this.currentRootSpan || new NoRecordSpan()}, options));
   }
 

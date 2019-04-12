@@ -1,5 +1,5 @@
 /**
- * Copyright 2018, OpenCensus Authors
+ * Copyright 2019, OpenCensus Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,12 +24,11 @@ import {Propagation} from '../propagation/types';
 import {DEFAULT_SAMPLING_RATE, SamplerBuilder, TraceParamsBuilder} from '../sampler/sampler';
 import * as samplerTypes from '../sampler/types';
 import {NoRecordRootSpan} from './no-record/no-record-root-span';
-import {NoRecordSpan} from './no-record/no-record-span';
 import {RootSpan} from './root-span';
 import * as types from './types';
 
 /**
- * This class represent a tracer.
+ * This class represents a tracer.
  */
 export class CoreTracerBase implements types.TracerBase {
   /** Indicates if the tracer is active */
@@ -107,26 +106,20 @@ export class CoreTracerBase implements types.TracerBase {
    * @param options A TraceOptions object to start a root span.
    * @param fn A callback function to run after starting a root span.
    */
-  startRootSpan<T>(options: types.TraceOptions, fn: (root: types.Span) => T):
-      T {
-    let traceId;
-    if (options && options.spanContext && options.spanContext.traceId) {
-      traceId = options.spanContext.traceId;
-    } else {
-      // New root span.
-      traceId = uuid.v4().split('-').join('');
+  startSpan(options: types.TraceOptions): types.Span {
+    // Start a child span
+    if (options.childOf) {
+      return options.childOf.startChildSpan(options.name, options.kind);
     }
-    const name = options && options.name ? options.name : 'span';
-    const kind =
-        options && options.kind ? options.kind : types.SpanKind.UNSPECIFIED;
 
-    let parentSpanId = '';
-    let traceState;
-    if (options && options.spanContext) {
-      // New child span.
-      parentSpanId = options.spanContext.spanId || '';
-      traceState = options.spanContext.traceState;
-    }
+    // Start a root span
+    const spanContext: types.SpanContext = options.spanContext ||
+        {spanId: '', traceId: uuid.v4().split('-').join('')};
+    const parentSpanId = spanContext.spanId;
+    const traceId = spanContext.traceId;
+    const name = options.name || 'span';
+    const kind = options.kind || types.SpanKind.UNSPECIFIED;
+    const traceState = spanContext.traceState;
 
     if (this.active) {
       const sampleDecision = this.makeSamplingDecision(options, traceId);
@@ -134,14 +127,14 @@ export class CoreTracerBase implements types.TracerBase {
         const rootSpan =
             new RootSpan(this, name, kind, traceId, parentSpanId, traceState);
         rootSpan.start();
-        return fn(rootSpan);
+        return rootSpan;
       }
     } else {
       this.logger.debug('Tracer is inactive, can\'t start new RootSpan');
     }
     const noRecordRootSpan = new NoRecordRootSpan(
         this, name, kind, traceId, parentSpanId, traceState);
-    return fn(noRecordRootSpan);
+    return noRecordRootSpan;
   }
 
   /** Notifies listeners of the span start. */
@@ -198,19 +191,6 @@ export class CoreTracerBase implements types.TracerBase {
         listener.onEndSpan(root);
       }
     }
-  }
-
-  /**
-   * Starts a span.
-   * @param [options] span options
-   */
-  startChildSpan(options?: types.SpanOptions): types.Span {
-    if (!options || !options.childOf) {
-      this.logger.debug(
-          'no current trace found - must start a new root span first');
-      return new NoRecordSpan();
-    }
-    return options.childOf.startChildSpan(options.name, options.kind);
   }
 
   /** Determine whether to sample request or not. */

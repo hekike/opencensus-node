@@ -66,7 +66,7 @@ describe('Tracer', () => {
 
   /** Should return a started tracer instance */
   describe('start()', () => {
-    let tracerStarted: types.TracerBase;
+    let tracerStarted: types.Tracer;
     before(() => {
       const tracer = new CoreTracer();
       assert.strictEqual(tracer.active, false);
@@ -83,7 +83,7 @@ describe('Tracer', () => {
 
   /** Should return an OnEndSpanEventListener list */
   describe('registerSpanEventListener() / get eventListeners()', () => {
-    let tracer: types.TracerBase, onEndSpan: OnEndSpanClass;
+    let tracer: types.Tracer, onEndSpan: OnEndSpanClass;
     before(() => {
       tracer = new CoreTracer();
       onEndSpan = new OnEndSpanClass();
@@ -105,7 +105,7 @@ describe('Tracer', () => {
 
   /** Should unregister a OnEndSpanEventlistener */
   describe('unregisterSpanEventListener()', () => {
-    let tracer: types.TracerBase, onEndSpan: OnEndSpanClass;
+    let tracer: types.Tracer, onEndSpan: OnEndSpanClass;
     before(() => {
       tracer = new CoreTracer();
       onEndSpan = new OnEndSpanClass();
@@ -306,7 +306,7 @@ describe('Tracer', () => {
   /** Should create and start a Span instance into a rootSpan */
   describe('startChildSpan()', () => {
     let span: types.Span;
-    let tracer: types.TracerBase;
+    let tracer: types.Tracer;
     before(() => {
       tracer = new CoreTracer();
       tracer.start(defaultConfig);
