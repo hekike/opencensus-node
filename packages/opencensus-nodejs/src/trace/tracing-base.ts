@@ -66,7 +66,7 @@ export class TracingBase implements core.Tracing {
    * @param userConfig A configuration object to start tracing.
    * @returns The started Tracing instance.
    */
-  start(userConfig?: core.Config): core.Tracing | TracingBase {
+  start(userConfig?: core.Config): core.Tracing|TracingBase {
     this.configLocal = extend(
         true, {}, defaultConfig, {plugins: this.defaultPlugins}, userConfig);
 
@@ -111,7 +111,7 @@ export class TracingBase implements core.Tracing {
    * Registers an exporter to send the collected traces to.
    * @param exporter The exporter to send the traces to.
    */
-  registerExporter(exporter: core.Exporter): core.Tracing | TracingBase {
+  registerExporter(exporter: core.Exporter): core.Tracing|TracingBase {
     if (this.configLocal.exporter) {
       this.unregisterExporter(this.configLocal.exporter);
     }
